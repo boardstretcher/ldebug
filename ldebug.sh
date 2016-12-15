@@ -21,11 +21,16 @@ NOW=$(date +%H%M)
 BLKID=$(which blkid)
 CAT=$(which cat)
 CURL=$(which curl)
+DF=$(which df)
 ECHO=$(which echo)
 FIND=$(which find)
+FREE=$(which free)
 GREP=$(which grep)
+LSBLK=$(which lsblk)
+LVS=$(which lvs)
 PING=$(which ping)
 PS=$(which ps)
+PVDISPLAY=$(which pvdisplay)
 PVS=$(which pvs)
 RM=$(which rm)
 SSH=$(which ssh)
@@ -36,20 +41,40 @@ WGET=$(which wget)
 # Functions
 ##############################################
 
+function get_general(){
+	$ECHO -e "\n\nMEMORY #######################"
+	$FREE -m
+	$ECHO -e "\n\nCPUINFO ######################"
+	$CAT /proc/cpuinfo | $GREP '^proc\|^model\|^cpu'
+}
+
 function get_storage(){
+	$ECHO -e "\n\nDF ###########################"
+	$DF
+	$ECHO -e "\n\nFSTAB #########################"
+	$CAT /etc/fstab
         $ECHO -e "\n\nMOUNTS ########################"
         $CAT /proc/mounts
         $ECHO -e "\n\nBLKID #########################"
         $BLKID
+	$ECHO -e "\n\nLSBLK ########################"
+	$LSBLK
+}
+
+function get_lvm(){
+	$ECHO -e "\n\nPVDISPLAY ####################"
+	$PVDISPLAY
         $ECHO -e "\n\nPVS ###########################"
         $PVS
+	$ECHO -e "\n\nLVS ###########################"
+	$LVS
 }
 
 function only_run_as(){
-        if [[ $EUID -ne $1 ]]; then
-                $ECHO "script must be run as uid $1" 1>&2
-                exit
-        fi
+	if [[ $EUID -ne $1 ]]; then
+		$ECHO "script must be run as uid $1" 1>&2
+		exit
+	fi
 }
 
 function usage(){
@@ -58,11 +83,13 @@ $0 [OPTIONS]
 
 EXAMPLE:
         ldebug.sh -s
-                print information about the system storage
+                print information about BASIC system storage
 
 OPTIONS:
+	-g		get general info (ram,cpu,etc)
         -h              display script help
-        -s              print information about system storage
+	-l		get info about LVM system storage
+        -s              get info about BASIC system storage
 EOF
 }
 
@@ -73,16 +100,22 @@ only_run_as 0
 if [[ $# -lt $MINARGS ]]; then usage; fi
 
 # argument handling - standard examples
-while getopts ":hs" opt; do
-        case $opt in
-                h)
-                usage
-                ;;
-                s)
-                get_storage
-                ;;
-                \?)
-                $ECHO "unknown arg: -$OPTARG"
-                ;;
-        esac
+while getopts ":ghls" opt; do
+	case $opt in
+		g)
+		get_general
+		;;
+		h)  
+		usage
+		;;
+		l)
+		get_lvm
+		;;
+		s)  
+		get_storage
+		;;
+		\?) 
+		$ECHO "unknown arg: -$OPTARG" 
+		;;
+	esac
 done
