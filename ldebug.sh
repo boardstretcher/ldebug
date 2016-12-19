@@ -5,79 +5,59 @@
 ##[ A simple information gathering tool for sharing system info with others
 ##[ on forums, email etc...
 
-##############################
 # Global Variables
-################################################
-
-# important global variables
+##############################################
 MINARGS=1
-
-# time and dates to construct filenames
 US_DATE=$(date +%d%m%Y)
 EU_DATE=$(date +%Y%m%d)
 NOW=$(date +%H%M)
+TMPFILE=$(mktemp /tmp/myfile.XXXXX)
 
-# Program paths
-BLKID=$(which blkid)
-CAT=$(which cat)
-CURL=$(which curl)
-DF=$(which df)
-ECHO=$(which echo)
-FIND=$(which find)
-FREE=$(which free)
-GREP=$(which grep)
-LSBLK=$(which lsblk)
-LVS=$(which lvs)
-PING=$(which ping)
-PS=$(which ps)
-PVDISPLAY=$(which pvdisplay)
-PVS=$(which pvs)
-RM=$(which rm)
-SSH=$(which ssh)
-TCPDUMP=$(which tcpdump)
-WGET=$(which wget)
-
-##############################
 # Functions
 ##############################################
+function output(){
+	# print out a section header
+	echo -e "\n\n"
+	echo -e "$1 ####################"
+}
 
 function get_general(){
-	$ECHO -e "\n\nMEMORY #######################"
-	$FREE -m
-	$ECHO -e "\n\nCPUINFO ######################"
-	$CAT /proc/cpuinfo | $GREP '^proc\|^model\|^cpu'
+	# general system information
+	output Memory
+	free -m
+	vmstat
+	output CPU
+	cat /proc/cpuinfo | grep '^proc\|^model\|^cpu'
 }
 
 function get_storage(){
-	$ECHO -e "\n\nDF ###########################"
-	$DF
-	$ECHO -e "\n\nFSTAB #########################"
-	$CAT /etc/fstab
-        $ECHO -e "\n\nMOUNTS ########################"
-        $CAT /proc/mounts
-        $ECHO -e "\n\nBLKID #########################"
-        $BLKID
-	$ECHO -e "\n\nLSBLK ########################"
-	$LSBLK
+	# general storage information
+	output DF
+	df -h
+	output FSTAB
+	cat /etc/fstab	
+	output MOUNTS
+	cat /proc/mounts
+	output BLKID
+	blkid
+	ouput LSBLK
+	lsblk
 }
 
 function get_lvm(){
-	$ECHO -e "\n\nPVDISPLAY ####################"
-	$PVDISPLAY
-        $ECHO -e "\n\nPVS ###########################"
-        $PVS
-	$ECHO -e "\n\nLVS ###########################"
-	$LVS
-}
-
-function only_run_as(){
-	if [[ $EUID -ne $1 ]]; then
-		$ECHO "script must be run as uid $1" 1>&2
-		exit
-	fi
+	# more specific LVM related information
+	output PVDISPLAY
+	pvdisplay
+	output PVS
+	pvs
+	output LVS
+	lvs
+	output VGS
+	vgs
 }
 
 function usage(){
+	# print out a simple usage/help menu
 cat << EOF
 $0 [OPTIONS] 
 
@@ -90,32 +70,43 @@ OPTIONS:
         -h              display script help
 	-l		get info about LVM system storage
         -s              get info about BASIC system storage
+	-Z		send to online pastebin and get shareable URL
 EOF
 }
 
 # currently only uid 0 (root) is allowed to run this script
-only_run_as 0
+if [[ $EUID -ne 0 ]]; then
+	echo "script must be run as root" 1>&2
+	exit
+fi
 
 # if args empty then display usage and exit
 if [[ $# -lt $MINARGS ]]; then usage; fi
 
 # argument handling - standard examples
-while getopts ":ghls" opt; do
+while getopts ":ghlsZ" opt; do
 	case $opt in
 		g)
-		get_general
+		get_general | tee -a $TMPFILE
 		;;
 		h)  
-		usage
+		usage 
 		;;
 		l)
-		get_lvm
+		get_lvm | tee -a $TMPFILE
 		;;
 		s)  
-		get_storage
+		get_storage | tee -a $TMPFILE
+		;;
+		Z)
+		echo -e "\n\n\nCopy, Paste and Share this pastebin URL: "
+		cat $TMPFILE | curl -F 'sprunge=<-' http://sprunge.us
 		;;
 		\?) 
-		$ECHO "unknown arg: -$OPTARG" 
+		echo "unknown arg: -$OPTARG" 
 		;;
 	esac
 done
+
+# clean temp file
+rm -f $TMPFILE
