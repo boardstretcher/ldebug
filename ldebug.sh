@@ -10,7 +10,6 @@
 MINARGS=1
 US_DATE=$(date +%d%m%Y)
 EU_DATE=$(date +%Y%m%d)
-NOW=$(date +%H%M)
 TMPFILE=$(mktemp /tmp/myfile.XXXXX)
 
 # Functions
@@ -28,6 +27,16 @@ get_general(){
 	vmstat
 	output CPU
 	grep '^proc\|^model\|^cpu' /proc/cpuinfo
+}
+
+get_hardware(){
+	# general hardware information
+	output Modules
+	lsmod
+	output PCI
+	lspci
+	output USB
+	lsusb
 }
 
 get_storage(){
@@ -68,6 +77,7 @@ EXAMPLE:
 OPTIONS:
 	-g		get general info (ram,cpu,etc)
         -h              display script help
+	-H		get general hardware info (modules,pci,usb)
 	-l		get info about LVM system storage
         -s              get info about BASIC system storage
 	-Z		send to online pastebin and get shareable URL
@@ -84,13 +94,16 @@ fi
 if [ $# -lt $MINARGS ]; then usage; fi
 
 # argument handling - standard examples
-while getopts ":ghlsZ" opt; do
+while getopts ":ghHlsZ" opt; do
 	case $opt in
 		g)
 		get_general | tee -a "$TMPFILE"
 		;;
 		h)  
 		usage 
+		;;
+		H)
+		get_hardware | tee -a "$TMPFILE"
 		;;
 		l)
 		get_lvm | tee -a "$TMPFILE"
@@ -108,9 +121,9 @@ while getopts ":ghlsZ" opt; do
 	esac
 done
 
+printf "\n\n"
 printf "US Date: %s \n" "$US_DATE"
 printf "EU Date: %s \n" "$EU_DATE"
-printf "NOW: %s \n" "$NOW"
 
 # clean temp file
 rm -f "$TMPFILE"
