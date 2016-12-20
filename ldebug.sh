@@ -1,4 +1,4 @@
-#!/bin/bash 
+#!/bin/sh
 
 ##[ ./ldebug.sh
 ##[
@@ -15,22 +15,22 @@ TMPFILE=$(mktemp /tmp/myfile.XXXXX)
 
 # Functions
 ##############################################
-function output(){
+output(){
 	# print out a section header
-	echo -e "\n\n"
-	echo -e "$1 ####################"
+	printf "\n\n"
+	printf "%s #################### \n" "$1"
 }
 
-function get_general(){
+get_general(){
 	# general system information
 	output Memory
 	free -m
 	vmstat
 	output CPU
-	cat /proc/cpuinfo | grep '^proc\|^model\|^cpu'
+	grep '^proc\|^model\|^cpu' /proc/cpuinfo
 }
 
-function get_storage(){
+get_storage(){
 	# general storage information
 	output DF
 	df -h
@@ -44,7 +44,7 @@ function get_storage(){
 	lsblk
 }
 
-function get_lvm(){
+get_lvm(){
 	# more specific LVM related information
 	output PVDISPLAY
 	pvdisplay
@@ -56,7 +56,7 @@ function get_lvm(){
 	vgs
 }
 
-function usage(){
+usage(){
 	# print out a simple usage/help menu
 cat << EOF
 $0 [OPTIONS] 
@@ -75,38 +75,42 @@ EOF
 }
 
 # currently only uid 0 (root) is allowed to run this script
-if [[ $EUID -ne 0 ]]; then
-	echo "script must be run as root" 1>&2
+if [ "$(id -u)" -ne "0" ]; then
+	printf "script must be run as root \n" 1>&2
 	exit
 fi
 
 # if args empty then display usage and exit
-if [[ $# -lt $MINARGS ]]; then usage; fi
+if [ $# -lt $MINARGS ]; then usage; fi
 
 # argument handling - standard examples
 while getopts ":ghlsZ" opt; do
 	case $opt in
 		g)
-		get_general | tee -a $TMPFILE
+		get_general | tee -a "$TMPFILE"
 		;;
 		h)  
 		usage 
 		;;
 		l)
-		get_lvm | tee -a $TMPFILE
+		get_lvm | tee -a "$TMPFILE"
 		;;
 		s)  
-		get_storage | tee -a $TMPFILE
+		get_storage | tee -a "$TMPFILE"
 		;;
 		Z)
-		echo -e "\n\n\nCopy, Paste and Share this pastebin URL: "
-		cat $TMPFILE | curl -F 'sprunge=<-' http://sprunge.us
+		printf "\n\n\nCopy, Paste and Share this pastebin URL: \n"
+		curl -F 'sprunge=<-' http://sprunge.us < cat "$TMPFILE"
 		;;
 		\?) 
-		echo "unknown arg: -$OPTARG" 
+		printf "unknown arg: -%s \n" "$OPTARG" 
 		;;
 	esac
 done
 
+printf "US Date: %s \n" "$US_DATE"
+printf "EU Date: %s \n" "$EU_DATE"
+printf "NOW: %s \n" "$NOW"
+
 # clean temp file
-rm -f $TMPFILE
+rm -f "$TMPFILE"
