@@ -80,7 +80,7 @@ OPTIONS:
 	-H		get general hardware info (modules,pci,usb)
 	-l		get info about LVM system storage
         -s              get info about BASIC system storage
-	-Z		send to online pastebin and get shareable URL
+	-Z		send to pastebin-like site and get shareable URL
 EOF
 }
 
