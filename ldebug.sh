@@ -20,13 +20,23 @@ output(){
 	printf "%s #################### \n" "$1"
 }
 
+obfuscate(){
+	echo obfuscate function
+	# To do:
+	# take public IP addresses from output and rename to IP-ADD-01, IP-ADD-02 etc..
+	# take public hostnames and obfuscate to something like HOST01, HOST02 etc..
+}
+
 get_general(){
 	# general system information
+	output VERSION
+	cat /proc/version
 	output Memory
 	free -m
 	vmstat
 	output CPU
 	grep '^proc\|^model\|^cpu' /proc/cpuinfo
+	cat /proc/loadavg
 }
 
 get_hardware(){
@@ -87,6 +97,8 @@ get_network(){
 	ip addr
 	output ROUTING
 	ip route
+	output LISTENING
+	netstat -tulpn
 }
 
 usage(){
@@ -156,6 +168,7 @@ done
 printf "\n\n"
 printf "US Date: %s \n" "$US_DATE"
 printf "EU Date: %s \n" "$EU_DATE"
+printf "NOTE: 'Command not found' and other ERRORS are common in the output. \n"
 
 # clean temp file
 rm -f "$TMPFILE"

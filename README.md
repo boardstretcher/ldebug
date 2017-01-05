@@ -7,7 +7,7 @@ Written in a simple bash script, easy to read, easy to understand what it is doi
 # downloading
 With wget:
 ```
-wget https://raw.githubusercontent.com/boardstretcher/ldebug/master/ldebug.sh
+wget --no-check-certificate https://raw.githubusercontent.com/boardstretcher/ldebug/master/ldebug.sh
 chmod 0755 ldebug.sh
 ```
 With curl:
