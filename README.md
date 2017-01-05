@@ -28,10 +28,12 @@ curl https://raw.githubusercontent.com/boardstretcher/ldebug/master/ldebug.sh | 
 
 # options
 ```
+-f get firewall info(iptables,firewalld)
 -g get general info (ram,cpu,etc)
 -h display script help
 -H get general hardware info (modules,pci,usb)
 -l get info about LVM system storage
+-n get networking info
 -s get info about BASIC system storage
 -Z send to pastebin-like site and get shareable URL
 ```
