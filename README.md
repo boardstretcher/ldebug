@@ -6,26 +6,32 @@ Written in a simple bash script, easy to read, easy to understand what it is doi
 
 # downloading
 With wget:
-```wget https://raw.githubusercontent.com/boardstretcher/ldebug/master/ldebug.sh
+```
+wget https://raw.githubusercontent.com/boardstretcher/ldebug/master/ldebug.sh
 chmod 0755 ldebug.sh
 ```
 With curl:
-```curl -o ldebug.sh https://raw.githubusercontent.com/boardstretcher/ldebug/master/ldebug.sh
+```
+curl -o ldebug.sh https://raw.githubusercontent.com/boardstretcher/ldebug/master/ldebug.sh
 chmod 0755 ldebug.sh
 ```
 # running
 if you have downloaded it:
-`./ldebug.sh <options>`
+```
+./ldebug.sh <options>
+```
 
 if you want to run it from the repo:
-`curl https://raw.githubusercontent.com/boardstretcher/ldebug/master/ldebug.sh | bash -s -- <options>`
+```
+curl https://raw.githubusercontent.com/boardstretcher/ldebug/master/ldebug.sh | bash -s -- <options>
+```
 
 # options
 ```
-	-g		get general info (ram,cpu,etc)
-  -h    display script help
-	-H		get general hardware info (modules,pci,usb)
-	-l		get info about LVM system storage
-  -s    get info about BASIC system storage
-	-Z		send to pastebin-like site and get shareable URL
+-g get general info (ram,cpu,etc)
+-h display script help
+-H get general hardware info (modules,pci,usb)
+-l get info about LVM system storage
+-s get info about BASIC system storage
+-Z send to pastebin-like site and get shareable URL
 ```
