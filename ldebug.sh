@@ -65,6 +65,30 @@ get_lvm(){
 	vgs
 }
 
+get_fw(){
+	# firewall information (iptables, firewalld)
+	output IPTABLES STATUS
+	systemctl status iptables
+	service iptables status
+	output FIREWALLD STATUS
+	systemctl status firewalld
+	firewall-cmd --state
+	output IPTABLES RULES
+	iptables -L
+	output FIREWALLD RULES
+	firewall-cmd --list-all
+}
+
+get_network(){
+	# network information
+	output ADAPTERS
+	ip link
+	output IPADDRESSES
+	ip addr
+	output ROUTING
+	ip route
+}
+
 usage(){
 	# print out a simple usage/help menu
 cat << EOF
@@ -75,10 +99,12 @@ EXAMPLE:
                 print information about BASIC system storage
 
 OPTIONS:
+	-f		get firewall info
 	-g		get general info (ram,cpu,etc)
         -h              display script help
 	-H		get general hardware info (modules,pci,usb)
 	-l		get info about LVM system storage
+	-n		get networking info
         -s              get info about BASIC system storage
 	-Z		send to pastebin-like site and get shareable URL
 EOF
@@ -94,8 +120,11 @@ fi
 if [ $# -lt $MINARGS ]; then usage; fi
 
 # argument handling - standard examples
-while getopts ":ghHlsZ" opt; do
+while getopts ":fghHlnsZ" opt; do
 	case $opt in
+		f)
+		get_fw | tee -a "$TMPFILE"
+		;;
 		g)
 		get_general | tee -a "$TMPFILE"
 		;;
@@ -107,6 +136,9 @@ while getopts ":ghHlsZ" opt; do
 		;;
 		l)
 		get_lvm | tee -a "$TMPFILE"
+		;;
+		n)
+		get_network | tee -a "$TMPFILE"
 		;;
 		s)  
 		get_storage | tee -a "$TMPFILE"
