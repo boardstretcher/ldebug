@@ -75,7 +75,7 @@ get_storage(){
 	cat /proc/mounts
 	output BLKID
 	blkid
-	ouput LSBLK
+	output LSBLK
 	lsblk
 }
 
