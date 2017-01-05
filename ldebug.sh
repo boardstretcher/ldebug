@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh 
 
 ##[ ./ldebug.sh
 ##[
@@ -21,10 +21,26 @@ output(){
 }
 
 obfuscate(){
-	echo obfuscate function
-	# To do:
-	# take public IP addresses from output and rename to IP-ADD-01, IP-ADD-02 etc..
-	# take public hostnames and obfuscate to something like HOST01, HOST02 etc..
+        local tmp=$(mktemp /tmp/ldebug-obf.XXXXX)
+        local ips
+        local uniqips
+        local count=0
+
+        printf "%s" "$1" > $tmp
+
+        ips=$(printf "%s" "$1" | grep -o '[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*')
+        uniqips=$(printf "%s \n" "$ips" | sort | uniq)
+
+        printf "%s" "$uniqips" | while IFS=" " read -r ip; do
+                sed -i "s/$ip/IP-ADD-0$count/g" $tmp
+                ((count++))
+        done
+
+        cat "$tmp"
+        rm -f "$tmp"
+
+        # To do:
+        # take public hostnames and obfuscate to something like HOST01, HOST02 etc..
 }
 
 get_general(){
@@ -135,7 +151,8 @@ if [ $# -lt $MINARGS ]; then usage; fi
 while getopts ":fghHlnsZ" opt; do
 	case $opt in
 		f)
-		get_fw | tee -a "$TMPFILE"
+		firewall=$(get_fw)
+		obfuscate "$firewall" | tee -a "$TMPFILE"
 		;;
 		g)
 		get_general | tee -a "$TMPFILE"
@@ -150,14 +167,15 @@ while getopts ":fghHlnsZ" opt; do
 		get_lvm | tee -a "$TMPFILE"
 		;;
 		n)
-		get_network | tee -a "$TMPFILE"
+		network=$(get_network)
+		obfuscate "$network" | tee -a "$TMPFILE"
 		;;
 		s)  
 		get_storage | tee -a "$TMPFILE"
 		;;
 		Z)
 		printf "\n\n\nCopy, Paste and Share this pastebin URL: \n"
-		curl -F 'sprunge=<-' http://sprunge.us < cat "$TMPFILE"
+		cat "$TMPFILE" | curl -F 'sprunge=<-' http://sprunge.us
 		;;
 		\?) 
 		printf "unknown arg: -%s \n" "$OPTARG" 
@@ -166,9 +184,9 @@ while getopts ":fghHlnsZ" opt; do
 done
 
 printf "\n\n"
+printf "Output Date============== \n"
 printf "US Date: %s \n" "$US_DATE"
 printf "EU Date: %s \n" "$EU_DATE"
-printf "NOTE: 'Command not found' and other ERRORS are common in the output. \n"
 
 # clean temp file
 rm -f "$TMPFILE"
