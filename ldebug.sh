@@ -5,6 +5,10 @@
 ##[ A simple information gathering tool for sharing system info with others
 ##[ on forums, email etc...
 
+##[ vim settings
+##[
+##[ set tabstop=4
+
 # Global Variables
 ##############################################
 MINARGS=1
@@ -15,36 +19,36 @@ TMPFILE=$(mktemp /tmp/myfile.XXXXX)
 # Functions
 ##############################################
 output(){
-	# print out a section header
+# print out a section header
 	printf "\n\n"
 	printf "%s #################### \n" "$1"
 }
 
 obfuscate(){
-        local tmp=$(mktemp /tmp/ldebug-obf.XXXXX)
-        local ips
-        local uniqips
-        local count=0
+	local tmp=$(mktemp /tmp/ldebug-obf.XXXXX)
+	local ips
+	local uniqips
+	local count=0
 
-        printf "%s" "$1" > $tmp
+	printf "%s" "$1" > $tmp
 
-        ips=$(printf "%s" "$1" | grep -o '[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*')
-        uniqips=$(printf "%s \n" "$ips" | sort | uniq)
+	ips=$(printf "%s" "$1" | grep -o '[0-9]*\.[0-9]*\.[0-9]*\.[0-9]*')
+	uniqips=$(printf "%s \n" "$ips" | sort | uniq)
 
-        printf "%s" "$uniqips" | while IFS=" " read -r ip; do
-                sed -i "s/$ip/IP-ADD-0$count/g" $tmp
-                ((count++))
-        done
+	printf "%s" "$uniqips" | while IFS=" " read -r ip; do
+		sed -i "s/$ip/IP-ADD-0$count/g" $tmp
+		((count++))
+	done
 
-        cat "$tmp"
-        rm -f "$tmp"
+	cat "$tmp"
+	rm -f "$tmp"
 
-        # To do:
-        # take public hostnames and obfuscate to something like HOST01, HOST02 etc..
+# To do:
+# take public hostnames and obfuscate to something like HOST01, HOST02 etc..
 }
 
 get_general(){
-	# general system information
+# general system information
 	output VERSION
 	cat /proc/version
 	output Memory
@@ -56,7 +60,7 @@ get_general(){
 }
 
 get_hardware(){
-	# general hardware information
+# general hardware information
 	output Modules
 	lsmod
 	output PCI
@@ -66,7 +70,7 @@ get_hardware(){
 }
 
 get_storage(){
-	# general storage information
+# general storage information
 	output DF
 	df -h
 	output FSTAB
@@ -80,7 +84,7 @@ get_storage(){
 }
 
 get_lvm(){
-	# more specific LVM related information
+# more specific LVM related information
 	output PVDISPLAY
 	pvdisplay
 	output PVS
@@ -92,7 +96,7 @@ get_lvm(){
 }
 
 get_fw(){
-	# firewall information (iptables, firewalld)
+# firewall information (iptables, firewalld)
 	output IPTABLES STATUS
 	systemctl status iptables
 	service iptables status
@@ -106,7 +110,7 @@ get_fw(){
 }
 
 get_network(){
-	# network information
+# network information
 	output ADAPTERS
 	ip link
 	output IPADDRESSES
@@ -118,22 +122,22 @@ get_network(){
 }
 
 usage(){
-	# print out a simple usage/help menu
+# print out a simple usage/help menu
 cat << EOF
-$0 [OPTIONS] 
+	$0 [OPTIONS] 
 
-EXAMPLE:
-        ldebug.sh -s
-                print information about BASIC system storage
+	EXAMPLE:
+	ldebug.sh -s
+	print information about BASIC system storage
 
-OPTIONS:
+	OPTIONS:
 	-f		get firewall info
 	-g		get general info (ram,cpu,etc)
-        -h              display script help
+	-h              display script help
 	-H		get general hardware info (modules,pci,usb)
 	-l		get info about LVM system storage
 	-n		get networking info
-        -s              get info about BASIC system storage
+	-s              get info about BASIC system storage
 	-Z		send to pastebin-like site and get shareable URL
 EOF
 }
@@ -145,41 +149,43 @@ if [ "$(id -u)" -ne "0" ]; then
 fi
 
 # if args empty then display usage and exit
-if [ $# -lt $MINARGS ]; then usage; fi
+if [ $# -lt $MINARGS ]; then 
+	usage
+fi
 
 # argument handling - standard examples
 while getopts ":fghHlnsZ" opt; do
 	case $opt in
-		f)
-		firewall=$(get_fw)
-		obfuscate "$firewall" | tee -a "$TMPFILE"
-		;;
-		g)
-		get_general | tee -a "$TMPFILE"
-		;;
-		h)  
-		usage 
-		;;
-		H)
-		get_hardware | tee -a "$TMPFILE"
-		;;
-		l)
-		get_lvm | tee -a "$TMPFILE"
-		;;
-		n)
-		network=$(get_network)
-		obfuscate "$network" | tee -a "$TMPFILE"
-		;;
-		s)  
-		get_storage | tee -a "$TMPFILE"
-		;;
-		Z)
-		printf "\n\n\nCopy, Paste and Share this pastebin URL: \n"
-		cat "$TMPFILE" | curl -F 'sprunge=<-' http://sprunge.us
-		;;
-		\?) 
-		printf "unknown arg: -%s \n" "$OPTARG" 
-		;;
+	f)
+	firewall=$(get_fw)
+	obfuscate "$firewall" | tee -a "$TMPFILE"
+	;;
+	g)
+	get_general | tee -a "$TMPFILE"
+	;;
+	h)  
+	usage 
+	;;
+	H)
+	get_hardware | tee -a "$TMPFILE"
+	;;
+	l)
+	get_lvm | tee -a "$TMPFILE"
+	;;
+	n)
+	network=$(get_network)
+	obfuscate "$network" | tee -a "$TMPFILE"
+	;;
+	s)  
+	get_storage | tee -a "$TMPFILE"
+	;;
+	Z)
+	printf "\n\n\nCopy, Paste and Share this pastebin URL: \n"
+	cat "$TMPFILE" | curl -F 'sprunge=<-' http://sprunge.us
+	;;
+	\?) 
+	printf "unknown arg: -%s \n" "$OPTARG" 
+	;;
 	esac
 done
 
